@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const Swarm = require('discovery-swarm');
 const defaults = require('dat-swarm-defaults');
 const getPort = require('get-port');
+const chain = require('./chain');
 
 const peers = {};
 let connSeq = 0;
@@ -14,7 +15,13 @@ const config = defaults({
     id: myPeerId
 });
 
+const MessageType = {
+    REQUEST_BLOCK: 'requestBlock',
+    RECEIVE_NEXT_BLOCK: 'receiveNextBlock'
+};
+
 const swarm = Swarm(config);
+
 (async () => {
     const port = await getPort();
     swarm.listen(port);
@@ -45,6 +52,29 @@ const swarm = Swarm(config);
                 'type: ' + peerId.toString(message.type),
             );
             console.log('-------- Received Message end -------');
+            switch (message.type) {
+                case MessageType.REQUEST_BLOCK:
+                    console.log('-----------REQUEST_BLOCK-------------');
+                    let requestedIndex = (JSON.parse(JSON.stringify(message.data))).index;
+                    console.log('-------------Request Index-------------------------------');
+                    console.log(requestedIndex);
+                    let requestedBlock = chain.getBlock(requestedIndex);
+                    if (requestedBlock)
+                    writeMessageToPeerToId(peerId.toString('hex'), MessageType.RECEIVE_NEXT_BLOCK, requestedBlock);
+                    else
+                        console.log('No block found @ index: ' + requestedIndex);
+                    console.log('-----------REQUEST_BLOCK-------------');
+                    break;
+                case MessageType.RECEIVE_NEXT_BLOCK:
+                    console.log('-----------RECEIVE_NEXT_BLOCK-------------');
+                    chain.addBlock(JSON.parse(JSON.stringify(message.data)));
+                    console.log(JSON.stringify(chain.blockchain));
+                    let nextBlockIndex = chain.getLatestBlock().index+1;
+                    console.log('-- request next block @ index: ' + nextBlockIndex);
+                    writeMessageToPeers(MessageType.REQUEST_BLOCK, {index: nextBlockIndex});
+                    console.log('-----------RECEIVE_NEXT_BLOCK-------------');
+                    break;
+            }
         });
     
         conn.on('close', () => {
@@ -66,8 +96,8 @@ const swarm = Swarm(config);
 
 
 setTimeout(() => {
-    writeMessageToPeers('hello', null);
-}, 10000);
+    writeMessageToPeers(MessageType.REQUEST_BLOCK, { index: chain.getLastesBlock().index+1});
+}, 5000);
 
 writeMessageToPeers = (type, data) => {
     for (let id in peers) {
