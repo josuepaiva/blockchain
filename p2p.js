@@ -26,6 +26,7 @@ const swarm = Swarm(config);
         const seq = connSeq;
         const peerId = info.id.toString('hex');
         console.log(`Connected #${seq} to peer: ${peerId}`);
+        
         if (info.initiator) {
             try {
                 conn.setKeepAlive(true, 600);
@@ -34,34 +35,33 @@ const swarm = Swarm(config);
             }
         }
 
-    });
-
-    swarm.on('data', data => {
-        let message = JSON.parse(data);
-        console.log('-------- Received Message start -------');
-        console.log(
-            'from: ' + peerId.toString('hex'),
-            'to: ' + peerId.toString(message.to),
-            'my: ' + myPeerId.toString('hex'),
-            'type: ' + peerId.toString(message.type),
-        );
-        console.log('-------- Received Message end -------');
-    });
-
-    swarm.on('close', () => {
-        console.log(`Connection ${seq} closed, peerId: ${peerId}`);
-        if (peers[peerId].seq === seq) {
-            delete peers[peerId];
+        conn.on('data', data => {
+            let message = JSON.parse(data);
+            console.log('-------- Received Message start -------');
+            console.log(
+                'from: ' + peerId.toString('hex'),
+                'to: ' + peerId.toString(message.to),
+                'my: ' + myPeerId.toString('hex'),
+                'type: ' + peerId.toString(message.type),
+            );
+            console.log('-------- Received Message end -------');
+        });
+    
+        conn.on('close', () => {
+            console.log(`Connection ${seq} closed, peerId: ${peerId}`);
+            if (peers[peerId].seq === seq) {
+                delete peers[peerId];
+            }
+        });
+    
+        if(!peers[peerId]) {
+            peers[peerId] = {};
         }
+        peers[peerId].conn = conn;
+        peers[peerId].seq = seq;
+        connSeq++;
+    
     });
-
-    if(!peers[peerId]) {
-        peers[peerId] = {};
-    }
-    peers[peerId].conn = conn;
-    peers[peerId].seq = seq;
-    connSeq++;
-
 })();
 
 
