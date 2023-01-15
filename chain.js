@@ -7,10 +7,10 @@ let getGenesisBlock = () => {
     return new Block(blockHeader, 0, null);
 };
 
-let getLastesBlock = () => blockchain[blockchain.length - 1];
+let getLatestBlock = () => blockchain[blockchain.length - 1];
 
 let addBlock = (newBlock) => {
-    let prevBlock = getLastesBlock();
+    let prevBlock = getLatesBlock();
     if (prevBlock.index < newBlock.index && newBlock.blockHeader.previousBlockHeader === prevBlock.blockHeader.merkleRoot) {
         blockchain.push(newBlock);
     } 
@@ -31,5 +31,5 @@ if (typeof exports != 'undefined') {
     exports.addBlock = addBlock;
     exports.getBlock = getBlock;
     exports.blockchain = blockchain;
-    exports.getLastesBlock = getLastesBlock;
+    exports.getLatestBlock = getLatestBlock;
 }
