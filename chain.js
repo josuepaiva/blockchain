@@ -17,7 +17,6 @@ let addBlock = (newBlock) => {
     } 
 };
 
-
 let getBlock = (index) => {
     if (blockchain.length - 1 >= index) {
         return blockchain[index];
