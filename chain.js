@@ -11,7 +11,7 @@ let getGenesisBlock = () => {
 let getLatestBlock = () => blockchain[blockchain.length - 1];
 
 let addBlock = (newBlock) => {
-    let prevBlock = getLatesBlock();
+    let prevBlock = getLatestBlock();
     if (prevBlock.index < newBlock.index && newBlock.blockHeader.previousBlockHeader === prevBlock.blockHeader.merkleRoot) {
         blockchain.push(newBlock);
     } 
